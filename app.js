@@ -77,10 +77,8 @@ function parseCards(rawText) {
   }
 
   const matches = [];
-  let match;
-
-  match = QA_BLOCK_REGEX.exec(trimmed);
-  while (match) {
+  let match = QA_BLOCK_REGEX.exec(trimmed);
+  while (match !== null) {
     matches.push({ question: match[1].trim(), answer: match[2].trim() });
     match = QA_BLOCK_REGEX.exec(trimmed);
   }
@@ -200,6 +198,7 @@ function renderFlashcard() {
   elements.flashQuestion.textContent = `Q: ${card.question}`;
   elements.flashAnswer.textContent = `A: ${card.answer}`;
   elements.flashAnswer.classList.toggle("hidden", !flashState.answerVisible);
+  elements.showAnswerBtn.textContent = flashState.answerVisible ? "Hide answer" : "Show answer";
   elements.flashcard.classList.remove("hidden");
   elements.flashcardEmpty.classList.add("hidden");
 }
