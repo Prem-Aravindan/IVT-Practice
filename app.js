@@ -1,5 +1,6 @@
 const STORAGE_KEY = "ivtPracticeCards";
 const FLASH_STORAGE_KEY = "ivtPracticeFlashState";
+const QA_BLOCK_REGEX = /(?:^|\n)(?:Q(?:uestion)?\s*[:.-]\s*)([\s\S]*?)(?:\nA(?:nswer)?\s*[:.-]\s*)([\s\S]*?)(?=(?:\nQ(?:uestion)?\s*[:.-])|$)/gi;
 
 const elements = {
   fileInput: document.getElementById("fileInput"),
@@ -48,7 +49,7 @@ function saveFlashState() {
 function normalizeCards(parsedCards) {
   return parsedCards
     .map((card) => ({
-      id: crypto.randomUUID(),
+      id: generateId(),
       question: (card.question || "").trim(),
       answer: (card.answer || "").trim(),
       status: "unread"
@@ -74,13 +75,13 @@ function parseCards(rawText) {
     // Ignore and continue with text parsing.
   }
 
-  const qaRegex = /(?:^|\n)(?:Q(?:uestion)?\s*[:.-]\s*)([\s\S]*?)(?:\nA(?:nswer)?\s*[:.-]\s*)([\s\S]*?)(?=(?:\nQ(?:uestion)?\s*[:.-])|$)/gi;
   const matches = [];
   let match;
 
-  while ((match = qaRegex.exec(trimmed))) {
+  while ((match = QA_BLOCK_REGEX.exec(trimmed))) {
     matches.push({ question: match[1].trim(), answer: match[2].trim() });
   }
+  QA_BLOCK_REGEX.lastIndex = 0;
 
   if (matches.length > 0) {
     return matches;
@@ -138,6 +139,22 @@ function getTodayKey() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function generateId() {
+  if (globalThis.crypto && typeof globalThis.crypto.randomUUID === "function") {
+    return globalThis.crypto.randomUUID();
+  }
+  return `card-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function shuffle(values) {
+  const copy = values.slice();
+  for (let index = copy.length - 1; index > 0; index -= 1) {
+    const swapIndex = Math.floor(Math.random() * (index + 1));
+    [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+  }
+  return copy;
+}
+
 function ensureDailyFlashcards() {
   const today = getTodayKey();
   if (flashState.date === today && Array.isArray(flashState.ids)) {
@@ -146,7 +163,7 @@ function ensureDailyFlashcards() {
 
   const priorityCards = cards.filter((card) => card.status !== "completed");
   const source = priorityCards.length > 0 ? priorityCards : cards;
-  const shuffledIds = source.map((c) => c.id).sort(() => Math.random() - 0.5).slice(0, 5);
+  const shuffledIds = shuffle(source.map((c) => c.id)).slice(0, 5);
 
   flashState = {
     date: today,
