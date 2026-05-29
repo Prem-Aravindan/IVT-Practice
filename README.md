@@ -7,7 +7,7 @@ A minimal interview-practice web app to:
 
 ## Run locally
 
-Open `/tmp/workspace/Prem-Aravindan/IVT-Practice/index.html` in a browser.
+Open `index.html` in a browser.
 
 ## Supported import formats
 
