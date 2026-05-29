@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interview Practice Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <main class="container">
+    <h1>Interview Practice Tracker</h1>
+    <p class="subtitle">Upload or paste your interview Q&A canvas and track your progress.</p>
+
+    <section class="panel">
+      <h2>Import content</h2>
+      <input id="fileInput" type="file" accept=".txt,.md,.json,text/plain,application/json" />
+      <textarea id="rawInput" rows="8" placeholder="Paste your Q&A content here..."></textarea>
+      <div class="row">
+        <button id="importBtn">Import cards</button>
+        <button id="clearAllBtn" class="danger">Clear all</button>
+      </div>
+      <p id="importStatus" class="status"></p>
+    </section>
+
+    <section class="panel">
+      <h2>Daily flashcards</h2>
+      <p id="flashcardDate" class="status"></p>
+      <div id="flashcard" class="flashcard hidden">
+        <h3 id="flashQuestion"></h3>
+        <p id="flashAnswer" class="hidden"></p>
+        <div class="row">
+          <button id="showAnswerBtn">Show answer</button>
+          <button id="nextFlashBtn">Next card</button>
+        </div>
+      </div>
+      <p id="flashcardEmpty" class="status hidden">Import cards to generate daily flashcards.</p>
+    </section>
+
+    <section class="panel">
+      <h2>Practice cards</h2>
+      <div class="row wrap">
+        <label for="filterSelect">Filter:</label>
+        <select id="filterSelect">
+          <option value="all">All</option>
+          <option value="unread">Unread</option>
+          <option value="completed">Completed</option>
+          <option value="revisit">Revisit</option>
+        </select>
+      </div>
+      <ul id="cardList" class="card-list"></ul>
+    </section>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>
