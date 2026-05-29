@@ -1,5 +1,6 @@
 const STORAGE_KEY = "ivtPracticeCards";
 const FLASH_STORAGE_KEY = "ivtPracticeFlashState";
+const DAILY_FLASHCARD_LIMIT = 5;
 const QA_BLOCK_REGEX = /(?:^|\n)(?:Q(?:uestion)?\s*[:.-]\s*)([\s\S]*?)(?:\nA(?:nswer)?\s*[:.-]\s*)([\s\S]*?)(?=(?:\nQ(?:uestion)?\s*[:.-])|$)/gi;
 
 const elements = {
@@ -78,8 +79,10 @@ function parseCards(rawText) {
   const matches = [];
   let match;
 
-  while ((match = QA_BLOCK_REGEX.exec(trimmed))) {
+  match = QA_BLOCK_REGEX.exec(trimmed);
+  while (match) {
     matches.push({ question: match[1].trim(), answer: match[2].trim() });
+    match = QA_BLOCK_REGEX.exec(trimmed);
   }
   QA_BLOCK_REGEX.lastIndex = 0;
 
@@ -163,7 +166,7 @@ function ensureDailyFlashcards() {
 
   const priorityCards = cards.filter((card) => card.status !== "completed");
   const source = priorityCards.length > 0 ? priorityCards : cards;
-  const shuffledIds = shuffle(source.map((c) => c.id)).slice(0, 5);
+  const shuffledIds = shuffle(source.map((c) => c.id)).slice(0, DAILY_FLASHCARD_LIMIT);
 
   flashState = {
     date: today,
