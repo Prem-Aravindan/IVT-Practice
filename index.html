@@ -3,53 +3,164 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Interview Practice Tracker</title>
+  <title>IVT Practice — VITO Interview Prep</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="container">
-    <h1>Interview Practice Tracker</h1>
-    <p class="subtitle">Upload or paste your interview Q&A canvas and track your progress.</p>
 
-    <section class="panel">
-      <h2>Import content</h2>
-      <input id="fileInput" type="file" accept=".txt,.md,.json,text/plain,application/json" />
-      <textarea id="rawInput" rows="8" placeholder="Paste your Q&A content here..."></textarea>
-      <div class="row">
-        <button id="importBtn">Import cards</button>
-        <button id="clearAllBtn" class="danger">Clear all</button>
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <!-- ===== HEADER ===== -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="header-brand">
+        <span class="brand-tag">// IVT</span>
+        <h1 class="brand-title">Interview Practice Tracker</h1>
+        <p class="brand-sub">VITO &middot; AI Software Engineer &middot; Medical Software &amp; Regulatory Innovation</p>
       </div>
-      <p id="importStatus" class="status"></p>
-    </section>
-
-    <section class="panel">
-      <h2>Daily flashcards</h2>
-      <p id="flashcardDate" class="status"></p>
-      <div id="flashcard" class="flashcard hidden">
-        <h3 id="flashQuestion"></h3>
-        <p id="flashAnswer" class="hidden"></p>
-        <div class="row">
-          <button id="showAnswerBtn">Show answer</button>
-          <button id="nextFlashBtn">Next card</button>
+      <div class="header-meta">
+        <div class="countdown-block">
+          <span class="countdown-label">Interview in</span>
+          <span class="countdown-value" id="countdownValue">—</span>
+          <span class="countdown-sub">5 Jun 2026 &middot; 10:45 CET</span>
         </div>
       </div>
-      <p id="flashcardEmpty" class="status hidden">Import cards to generate daily flashcards.</p>
+    </div>
+  </header>
+
+  <!-- ===== STATS BAR ===== -->
+  <div class="stats-bar" id="statsBar">
+    <div class="stat-item">
+      <span class="stat-num" id="statTotal">0</span>
+      <span class="stat-label">Total</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item unread-stat">
+      <span class="stat-num" id="statUnread">0</span>
+      <span class="stat-label">Unread</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item revisit-stat">
+      <span class="stat-num" id="statRevisit">0</span>
+      <span class="stat-label">Revisit</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item completed-stat">
+      <span class="stat-num" id="statCompleted">0</span>
+      <span class="stat-label">Completed</span>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat-item progress-stat">
+      <div class="mini-progress">
+        <div class="mini-progress-bar" id="progressBar" style="width:0%"></div>
+      </div>
+      <span class="stat-label" id="progressLabel">0% done</span>
+    </div>
+  </div>
+
+  <main class="container">
+
+    <!-- ===== FLASHCARD SECTION ===== -->
+    <section class="panel" id="flashPanel">
+      <div class="panel-header">
+        <h2 class="panel-title"><span class="panel-tag">01</span> Daily Flashcards</h2>
+        <span class="flash-counter" id="flashCounter"></span>
+      </div>
+
+      <div id="flashcardWrapper" class="flashcard-wrapper hidden">
+        <div class="flashcard-scene">
+          <div class="flashcard" id="flashcard">
+            <div class="flashcard-face flashcard-front">
+              <div class="flashcard-face-label">Question</div>
+              <p id="flashQuestion" class="flashcard-text"></p>
+              <div class="flashcard-hint">[ SPACE ] or click to reveal answer</div>
+            </div>
+            <div class="flashcard-face flashcard-back">
+              <div class="flashcard-face-label">Answer</div>
+              <p id="flashAnswer" class="flashcard-text answer-text"></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="flash-controls">
+          <button id="showAnswerBtn" class="btn btn-ghost">
+            <span id="showAnswerLabel">Show Answer</span>
+            <kbd>Space</kbd>
+          </button>
+          <button id="nextFlashBtn" class="btn btn-primary">
+            Next Card <kbd>→</kbd>
+          </button>
+        </div>
+      </div>
+
+      <p id="flashcardEmpty" class="empty-state hidden">
+        <span class="empty-icon">▶_</span>
+        Import cards or load VITO questions to begin your daily session.
+      </p>
+      <p id="flashcardDate" class="session-date"></p>
     </section>
 
+    <!-- ===== IMPORT SECTION ===== -->
+    <section class="panel panel-import">
+      <div class="panel-header">
+        <h2 class="panel-title"><span class="panel-tag">02</span> Import Cards</h2>
+        <button class="btn btn-sm btn-vito" id="loadVitoBtn">⚡ Load VITO Questions</button>
+      </div>
+
+      <div class="import-grid">
+        <div class="import-area">
+          <label class="field-label" for="rawInput">Paste Q&amp;A content</label>
+          <textarea id="rawInput" rows="6" placeholder="Q: What is your AI workflow experience?&#10;A: I built an EEG neuroprofiling platform using three agents...&#10;&#10;Q: How do you validate AI-generated reports?&#10;A: I treat validation as a workflow problem..."></textarea>
+        </div>
+        <div class="import-divider" aria-hidden="true"><span>or</span></div>
+        <div class="import-file-area">
+          <span class="field-label">Upload file</span>
+          <label class="file-drop" id="fileDrop">
+            <input id="fileInput" type="file" accept=".txt,.md,.json,text/plain,application/json" aria-label="Upload Q&A file" />
+            <span class="file-drop-icon">↑</span>
+            <span class="file-drop-text">.txt &nbsp;·&nbsp; .md &nbsp;·&nbsp; .json</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="import-actions">
+        <button id="importBtn" class="btn btn-primary">Import Cards</button>
+        <button id="clearAllBtn" class="btn btn-danger">Clear All</button>
+      </div>
+      <p id="importStatus" class="status-msg" role="status" aria-live="polite"></p>
+    </section>
+
+    <!-- ===== PRACTICE CARDS SECTION ===== -->
     <section class="panel">
-      <h2>Practice cards</h2>
-      <div class="row wrap">
-        <label for="filterSelect">Filter:</label>
-        <select id="filterSelect">
-          <option value="all">All</option>
-          <option value="unread">Unread</option>
-          <option value="completed">Completed</option>
-          <option value="revisit">Revisit</option>
-        </select>
+      <div class="panel-header">
+        <h2 class="panel-title"><span class="panel-tag">03</span> Practice Cards</h2>
+        <div class="filter-group">
+          <label class="sr-only" for="filterSelect">Filter cards</label>
+          <select id="filterSelect">
+            <option value="all">All cards</option>
+            <option value="unread">Unread</option>
+            <option value="revisit">Revisit</option>
+            <option value="completed">Completed</option>
+          </select>
+        </div>
       </div>
       <ul id="cardList" class="card-list"></ul>
     </section>
+
   </main>
+
+  <footer class="app-footer">
+    <span class="footer-text">VITO &middot; Gokhan Ertaylan &amp; Simon Denil &middot; 5 June 2026</span>
+    <span class="footer-keys">
+      <kbd>Space</kbd> flip &nbsp;
+      <kbd>→</kbd> next &nbsp;
+      <kbd>1</kbd> done &nbsp;
+      <kbd>2</kbd> revisit
+    </span>
+  </footer>
 
   <script src="app.js"></script>
 </body>
