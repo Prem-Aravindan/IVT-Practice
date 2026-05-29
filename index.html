@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IVT Practice — Interview Prep Tracker</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="scanline-overlay"></div>
+
+  <header class="header">
+    <h1 class="logo">⟨IVT⟩ <span class="logo-accent">Practice</span></h1>
+    <p class="tagline">Level up your interview game — one card at a time.</p>
+  </header>
+
+  <main class="container">
+    <!-- Import Section -->
+    <section class="panel" id="importPanel">
+      <div class="panel-header">
+        <h2><span class="icon">📥</span> Import Content</h2>
+        <button id="toggleImport" class="btn-icon" aria-label="Toggle import panel">▼</button>
+      </div>
+      <div class="panel-body">
+        <div class="file-drop" id="fileDrop">
+          <input id="fileInput" type="file" accept=".txt,.md,.json,text/plain,application/json" />
+          <p class="drop-text">Drop file here or <span class="highlight">click to browse</span></p>
+          <p class="drop-hint">.txt, .md, .json supported</p>
+        </div>
+        <textarea id="rawInput" rows="6" placeholder="Or paste your Q&A content here...&#10;&#10;Format: Q: question&#10;A: answer&#10;&#10;Or JSON: [{&quot;question&quot;:&quot;...&quot;, &quot;answer&quot;:&quot;...&quot;}]"></textarea>
+        <div class="row">
+          <button id="importBtn" class="btn btn-primary">⚡ Import Cards</button>
+          <button id="clearAllBtn" class="btn btn-danger">🗑️ Clear All</button>
+        </div>
+        <p id="importStatus" class="status"></p>
+      </div>
+    </section>
+
+    <!-- Stats Bar -->
+    <section class="stats-bar" id="statsBar">
+      <div class="stat">
+        <span class="stat-value" id="totalCount">0</span>
+        <span class="stat-label">Total</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="unreadCount">0</span>
+        <span class="stat-label">Unread</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="completedCount">0</span>
+        <span class="stat-label">Done</span>
+      </div>
+      <div class="stat">
+        <span class="stat-value" id="revisitCount">0</span>
+        <span class="stat-label">Revisit</span>
+      </div>
+    </section>
+
+    <!-- Daily Flashcards -->
+    <section class="panel panel-flashcard">
+      <div class="panel-header">
+        <h2><span class="icon">🃏</span> Daily Flashcards</h2>
+        <span id="flashcardDate" class="badge badge-date"></span>
+      </div>
+      <div class="panel-body">
+        <div id="flashcard" class="flashcard hidden">
+          <div class="flashcard-progress">
+            <span id="flashProgress"></span>
+          </div>
+          <div class="flashcard-content">
+            <h3 id="flashQuestion" class="flash-question"></h3>
+            <div id="flashAnswer" class="flash-answer hidden"></div>
+          </div>
+          <div class="row flashcard-actions">
+            <button id="showAnswerBtn" class="btn btn-secondary">👁️ Reveal Answer</button>
+            <button id="nextFlashBtn" class="btn btn-primary">Next →</button>
+          </div>
+        </div>
+        <p id="flashcardEmpty" class="status hidden">Import cards to generate daily flashcards.</p>
+      </div>
+    </section>
+
+    <!-- Practice Cards -->
+    <section class="panel panel-cards">
+      <div class="panel-header">
+        <h2><span class="icon">📋</span> Practice Cards</h2>
+        <div class="filter-group">
+          <label for="filterSelect" class="sr-only">Filter:</label>
+          <select id="filterSelect" class="select-retro">
+            <option value="all">All Cards</option>
+            <option value="unread">🆕 Unread</option>
+            <option value="completed">✅ Completed</option>
+            <option value="revisit">🔄 Revisit</option>
+          </select>
+        </div>
+      </div>
+      <div class="panel-body">
+        <ul id="cardList" class="card-list"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Built for interview prep. Keep grinding. 🎮</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
