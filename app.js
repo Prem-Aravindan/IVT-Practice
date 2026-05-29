@@ -10,83 +10,137 @@ const INTERVIEW_DATE    = new Date("2026-06-05T10:45:00");
 
 const QA_BLOCK_REGEX = /(?:^|\n)(?:Q(?:uestion)?\s*[:.-]\s*)([\s\S]*?)(?:\nA(?:nswer)?\s*[:.-]\s*)([\s\S]*?)(?=(?:\nQ(?:uestion)?\s*[:.-])|$)/gi;
 
-/* ---- VITO Sample Questions (from interview prep workspace) ---- */
+/* ---- VITO Sample Questions — exact text from interview prep workspace ---- */
 const VITO_SAMPLE_QA = [
+  // ── FROM: vito_introductory_interview_prep_workspace.md ──────────────────
   {
     question: "Give your 90-second self-introduction.",
-    answer: "My background is biomedical engineering. Most of my recent work is at the intersection where healthcare or research ideas need to become usable software. At Mindspeller, I worked as technical owner across several health-adjacent products—most relevantly an EEG-based neuroprofiling and AI reporting platform spanning data collection, preprocessing, feature extraction, AI-assisted interpretation, backend, frontend, deployment, validation, and documentation. VITO interests me because it sits exactly between the areas I want to build in: AI workflows, biomedical data, medical software, and real-world healthcare impact."
-  },
-  {
-    question: "How did your three-agent neuroprofiling system work?",
-    answer: "Three interpretation agents: (1) interpreted EEG-derived implicit report features, (2) interpreted semantic IAT path responses, (3) synthesized both into the final neuroprofile. AI worked as an interpretation layer on top of structured inputs—not as a free-form decision maker. This made the workflow easier to control, explain, and refine versus asking one model to generate a full profile from raw data."
-  },
-  {
-    question: "Why multiple agents instead of one prompt?",
-    answer: "EEG-derived data and semantic IAT responses are different types of input—combining them in one prompt makes the system harder to control and debug. Separating into agents gives each step a clearer responsibility. If output was weak, I could trace whether the issue came from EEG interpretation, IAT interpretation, or final synthesis. Easier iteration when refining recommendation logic in v2."
-  },
-  {
-    question: "How did you validate AI-generated reports?",
-    answer: "I treated validation as a workflow problem, not just output review. (1) Input quality: is required data available? Is session data usable? Do structured intermediate outputs make sense? (2) Output consistency: does the report stay faithful to EEG-derived features and IAT responses? Does it introduce unsupported claims? (3) Manual review and iteration—v1 showed open-ended role generation was too hard to explain, leading to curated role mapping in v2."
-  },
-  {
-    question: "How did you reduce hallucination or uncontrolled output?",
-    answer: "Reduced the model's decision space. In v2: cognitive features → role-relevant abilities → curated role list → AI selects and explains from that controlled structure. General approach: structured inputs + clear boundaries + predefined output formats + limited decision space. For sensitive workflows: human review + logging of intermediate outputs."
-  },
-  {
-    question: "Why shift from LLM-generated roles to curated role mapping?",
-    answer: "Open-ended role generation sounded convincing but was not explainable. If a model freely suggests a role, it is difficult to justify why. Curated mapping = extract cognitive features → map to role-relevant abilities → use a curated role list → AI selects top recommendations. Output becomes traceable and appropriate for a recruitment decision-support context. The shift was about explainability, control, and responsible use."
-  },
-  {
-    question: "What makes an AI workflow explainable?",
-    answer: "Explainability starts before the final output. The workflow should make clear: what inputs were used, what transformations happened, what rules or mappings were applied, what role the AI played. In the neuroprofiling product, explainability improved when role suggestions were tied back to a cognitive feature → ability → role mapping. In healthcare/medical software: document intended use, inputs, processing steps, model role, expected outputs, limitations, validation, and human oversight points."
-  },
-  {
-    question: "How would you document this system for a medical software context?",
-    answer: "Start with intended use—it determines risk level and documentation requirements. Then: user requirements, system requirements, data flow, model role, inputs/outputs, validation steps, known limitations, human review points. Separate what is deterministic from what is AI-assisted. Test cases for: normal inputs, missing data, poor-quality data, edge cases, repeated runs, unsafe/unsupported outputs. Document how changes to prompts, mappings, models, or data processing affect system behavior."
-  },
-  {
-    question: "What would change if this system were used for clinical decision support?",
-    answer: "Much stronger requirements: risk analysis, clinical evidence, validation, traceability, human oversight, data protection, change control. AI output would need clear limitations and should not silently make high-impact decisions. More careful evaluation: performance, dataset representativeness, failure modes, and how clinicians interact with output. The key distinction: self-insight/decision-support product vs. software that influences diagnosis, treatment, or clinical decision-making."
-  },
-  {
-    question: "What is your understanding of SaMD / MDSW?",
-    answer: "SaMD (Software as a Medical Device) / MDSW (Medical Device Software) is software with a medical intended purpose: diagnosis, prevention, monitoring, prediction, prognosis, treatment, or alleviation of disease. Key issue: intended use. The same technical system falls into different categories depending on claims made and how output is used. Intended use drives whether software becomes medical software and what regulatory expectations apply. I am regulatory-aware rather than a regulatory specialist, but I understand why intended use, risk, traceability, and validation are central."
-  },
-  {
-    question: "How do you translate user requirements into system requirements?",
-    answer: "Map the workflow: Who is the user? What data enters? What output is needed? What decisions are automated? What needs human review? What can fail? Then convert to system behavior: input validation, required data checks, processing steps, report generation logic, error handling, access control, output review. Many Mindspeller ideas started as broad product/research needs—my job was to turn them into data flows, backend logic, frontend workflows, validation steps, and documentation."
-  },
-  {
-    question: "How would you test an AI healthcare prototype?",
-    answer: "Multiple levels: (1) Non-AI parts: data ingestion, preprocessing, APIs, database, access control, frontend. (2) AI workflow: correct inputs received, output follows expected format, grounded in provided data, consistent across similar cases, handles missing/poor-quality inputs safely. (3) Safety and usability: does output overclaim? Are limitations clear? Is human review needed? Could output be misinterpreted? Key point: AI healthcare testing = technical correctness + output quality + safety + usability + traceability."
-  },
-  {
-    question: "What is RAG, and where would it help in regulatory workflows?",
-    answer: "RAG = retrieval-augmented generation. System retrieves relevant info from a document collection, then generates answers grounded in that context. Useful for: searching guidance documents, standards, internal procedures, technical documentation, previous evidence. BUT: generated answers should not be treated as final authority. Must show sources, support traceability, include human review. Retrieval quality is critical—wrong documents → convincing but wrong answers."
-  },
-  {
-    question: "How do you handle sensitive health-related data?",
-    answer: "Think from the start of the workflow: What data is truly necessary? Who needs access? Where is it stored? Is it sent to external services? How long is it retained? How are outputs controlled? Apply: data minimisation, role-based access, audit-friendly handling, separation between raw data/processed features/generated outputs. Be especially careful about sending sensitive data to external APIs—consider anonymisation, pseudonymisation, local processing, contractual safeguards, or human review before high-impact use."
-  },
-  {
-    question: "What are your regulatory gaps and how are you addressing them?",
-    answer: "Main gap: I have not owned a full medical software regulatory submission or certification process. Familiar with MDR and SaMD concepts, GDPR-aware workflows, documentation, validation logic, and audit-friendly handling—but not a regulatory specialist yet. What I want to build: the translation layer between regulation and engineering—how MDR/IVDR/AI Act/medical software guidance becomes development activities: user requirements, system requirements, risk controls, validation plans, technical documentation, traceability, and post-deployment monitoring."
-  },
-  {
-    question: "Why are you applying while already employed?",
-    answer: "My current role gave me unusual end-to-end ownership early: AI workflows, backend, frontend, biomedical data pipelines, deployment, documentation, GDPR-aware handling. But the work shifted toward B2B neuromarketing and consumer-tech. My long-term motivation is to build systems closer to healthcare, patients, validation, and real-world medical impact. VITO connects AI engineering, healthcare software, prototyping, documentation, regulatory-readiness, and real-world impact—which is the direction I want my career to move in."
+    answer: "Thank you for inviting me. My background is in biomedical engineering, but most of my recent work has been at the point where healthcare or research ideas need to become usable software.\n\nAt Mindspeller, I worked as the technical owner across several health-adjacent products. The most relevant example is an EEG-based neuroprofiling and AI reporting platform, where I worked across data collection, preprocessing, feature extraction, AI-assisted interpretation, backend services, frontend workflows, deployment, validation checks, and documentation.\n\nWhat I think fits well with this VITO role is that it is not only about building AI models. It is about turning use cases into prototypes, making workflows testable, documenting behavior, and thinking about responsible deployment in healthcare. I am not yet a regulatory specialist, but I have practical experience with GDPR-aware workflows, documentation, validation logic, and medical technology systems, and I am very motivated to grow deeper into MDSW, IVDR, AI Act, and regulatory-ready AI software.\n\nSo the reason this role interests me is that it sits exactly between the areas I want to build in: AI workflows, biomedical data, medical software, and real-world healthcare impact."
   },
   {
     question: "Why VITO?",
-    answer: "VITO's Digital BioSystems work combines AI, health data, digital twins, personalised medicine, and regulatory science—not as separate areas but as one integrated space. I want to contribute as a builder while growing into validated, documented, trusted healthcare AI. Not AI as a demo, but AI that can become useful, validated, and trusted in real healthcare settings."
+    answer: "What attracts me to VITO is the position between research and practical healthcare application. I have worked on AI-enabled and biomedical software systems, but I want to grow in an environment where those systems are built with more attention to validation, documentation, regulation, and real-world medical impact. VITO's Digital BioSystems work feels like a strong fit because it combines AI, health data, digital twins, and regulatory thinking instead of treating them as separate areas."
   },
   {
-    question: "Why should we choose you?",
-    answer: "I connect several layers important for this role: biomedical systems understanding, hands-on software building across backend/frontend/APIs/data pipelines, practical AI workflow integration, and thinking in terms of validation, documentation, GDPR-aware handling, and user-facing reliability. Not the finished regulatory expert yet—but the right combination of builder mindset, biomedical context, AI workflow experience, and motivation to grow into regulatory-ready healthcare software."
+    question: "Why this role?",
+    answer: "What attracted me is that the role combines building and thinking. I like defining the workflow, understanding the data, building the prototype, testing it, documenting the behavior, and then improving what is unclear or unreliable.\n\nThat is very similar to how I worked at Mindspeller, but VITO gives that work a stronger healthcare, research, and regulatory direction. I do not see this as a narrow AI role. I see it as a role where AI, healthcare software, requirements, prototyping, validation, and documentation all come together. That is exactly the kind of work I want to do."
+  },
+  {
+    question: "Tell us about your AI workflow experience.",
+    answer: "One example is the EEG neuroprofiling and AI reporting workflow I built. The system collected EEG and behavioral data, processed it through signal-processing and feature-extraction steps, then used AI-assisted interpretation to generate clearer summaries for non-technical users.\n\nThe important part was not just calling an LLM. I had to structure the inputs, decide what should be deterministic versus generated, add validation and review steps, and make the output understandable. That taught me to treat AI as one component inside a larger controlled workflow, not as a black box.\n\nDeeper points: Used AI APIs such as OpenAI, Claude, and Google AI APIs. Worked on structured prompting and AI-assisted reporting. Used human-in-the-loop review for sensitive outputs. Built data quality and output consistency checks. Focused on making generated outputs understandable and usable."
+  },
+  {
+    question: "How do you handle validation?",
+    answer: "I usually start by separating the workflow into stages: input quality, processing logic, generated output, and user-facing interpretation. For EEG and AI reporting, I used data quality checks, output consistency checks, manual review loops, and structured reporting.\n\nFor AI outputs specifically, I do not assume generation is correct just because the response sounds good. I prefer grounding, traceability, expected-output checks, and human review where the risk is high. Especially in healthcare-related systems, I think validation needs to be part of the workflow design from the beginning, not something added only at the end."
+  },
+  {
+    question: "What is your regulatory experience?",
+    answer: "I would describe myself as regulatory-aware rather than a regulatory specialist. I am familiar with MDR and SaMD concepts, and I have worked with GDPR-aware workflows, access control, documentation, validation logic, and audit-friendly handling.\n\nWhat I want to grow into is the translation layer: how regulatory requirements become development, testing, documentation, traceability, and validation practices. I have not owned a full regulatory submission or certification process, so I would not overclaim that experience. But I do have the right engineering mindset for it because I already care about workflow clarity, traceability, documentation, and controlled outputs."
+  },
+  {
+    question: "What is your weakness for this role?",
+    answer: "My main growth area is formal regulatory depth, especially IVDR, AI Act, and detailed MDSW validation frameworks. I have worked around documentation, GDPR-aware handling, and validation logic in practice, but I have not yet owned a full regulatory submission or certification process.\n\nThe reason I am interested in VITO is that I want to build that depth while contributing hands-on software and AI workflow experience from day one."
   },
   {
     question: "How do you work when requirements are unclear?",
-    answer: "Make ambiguity visible early. Translate the idea into a workflow: who is the user, what data enters, what output is expected, what decisions are automated, what needs review, what can fail. Build a small prototype or proof-of-concept to test assumptions. Once behavior is clearer, document the workflow and refine with stakeholders. At Mindspeller, many ideas started as broad product or research needs that had to become concrete data flows, backend logic, frontend workflows, and validation steps."
+    answer: "I try to make ambiguity visible early. I usually translate the idea into a workflow: who is the user, what data enters the system, what output is expected, what decisions are automated, what needs review, and what can fail.\n\nThen I build a small prototype or proof-of-concept to test the assumptions. Once the behavior is clearer, I document the workflow and refine it with stakeholders. This is how I worked at Mindspeller, where many ideas started as broad product or research needs and had to be turned into concrete data flows, backend logic, frontend workflows, and validation steps."
+  },
+  {
+    question: "Why are you applying for a new role while already employed?",
+    answer: "My current role has been valuable because I gained unusual end-to-end ownership very early, across AI workflows, software development, biomedical data pipelines, deployment, documentation, and GDPR-aware handling. It made me a much stronger builder.\n\nThe reason I am looking now is that I want my next step to be more directly connected to healthcare AI and medical software. When I moved from internship to full-time, the part that excited me most was the possibility of contributing to health-related neurotechnology, especially assistive communication. But over time, my work became more focused on B2B neuromarketing and consumer-tech products. I learned a lot from that, but I realised that my long-term motivation is to build systems that are closer to healthcare, patients, validation, and real-world medical impact.\n\nThat is why VITO feels like a strong fit. This role connects AI engineering, healthcare software, prototyping, documentation, regulatory-readiness, and real-world impact. That is the direction I want my career to move in."
+  },
+  {
+    question: "Why should we choose you?",
+    answer: "I think my strongest value is that I can connect several layers that are important for this role. I understand biomedical systems and physiological data because of my background. I can build software hands-on across backend, frontend, APIs, data pipelines, and deployment. I have practical experience integrating AI into real workflows. And I already think in terms of validation, documentation, GDPR-aware handling, and user-facing reliability.\n\nI am not claiming to be the finished expert in medical software regulation yet. But I do think I bring the right combination of builder mindset, biomedical context, AI workflow experience, and motivation to grow into regulatory-ready healthcare software."
+  },
+  {
+    question: "Tell us about the EEG AI reporting platform.",
+    answer: "The EEG platform is probably the most relevant example from my experience. The goal was to move from raw EEG and behavioral data to outputs that users could actually understand. So I worked across the full workflow: headset configuration, data collection, preprocessing, feature extraction, backend services, AI-assisted interpretation, frontend reporting, validation checks, and documentation.\n\nWhat makes this relevant to VITO is that it required more than coding. I had to understand the data, define the workflow, think about reliability, and make sure the output was usable. I also had to think carefully about what should be generated by AI and what should remain structured or rule-based."
+  },
+  {
+    question: "What do you mean by end-to-end ownership? Give an example.",
+    answer: "One example is the neuroprofiling and AI reporting platform I built at Mindspeller. I was involved from the early product decision stage, where we narrowed the idea into career profiling, all the way to hardware selection, EEG task design, signal processing, backend workflows, frontend reporting, AI interpretation, and post-launch refinement.\n\nThe difficult part was that we used an affordable single-channel EEG headset, so the data was limited. That forced me to build a more robust live processing layer and think carefully about task design, validation, and interpretation. Later, after thousands of users received their neuroprofile and the product was positioned for recruiters as a decision-support layer, I refined the AI recommendation system to make it more explainable by mapping cognitive features to role-relevant abilities and selecting from a curated role list."
+  },
+  {
+    question: "Tell us about your RAG/document assistant project.",
+    answer: "I built a local RAG document assistant to explore privacy-focused document search and grounded generation. The workflow included PDF ingestion, OCR support, text chunking, embedding generation, hybrid BM25 and vector retrieval, and a chat interface that generated answers from retrieved document context.\n\nThe reason I built it locally was to reduce unnecessary data exposure and to make the system more controllable. It also helped me understand how important retrieval quality, chunking, source grounding, and evaluation are when using GenAI in document-heavy workflows."
+  },
+  {
+    question: "Tell us about your KU Leuven work.",
+    answer: "At KU Leuven, I am working on structured pipelines for multi-channel EEG datasets related to early Alzheimer's diagnosis. My work involves preprocessing, feature extraction, validation, and downstream analysis workflows.\n\nThe main value I bring there is translating neuroscience research requirements into reproducible software workflows. In research settings, the code and the process can easily become difficult to reproduce, so I focus on clear inputs and outputs, validation steps, and pipeline structure."
+  },
+  {
+    question: "How do you handle sensitive data and GDPR?",
+    answer: "My practical experience comes from working with data-sensitive workflows at Mindspeller, where I also served as Data Protection Officer. I supported GDPR-aware access control, responsible data handling, and privacy-conscious product workflows.\n\nFrom an engineering point of view, I try to think about data minimisation, access boundaries, role-based permissions, traceability, and avoiding unnecessary exposure of sensitive inputs. For AI workflows, I also think it is important to be careful about what is sent to external APIs, how outputs are stored, and whether users understand the limits of generated content."
+  },
+  {
+    question: "What technical tools have you used?",
+    answer: "My strongest hands-on stack is Python, Vue.js, JavaScript, REST APIs, MySQL, Docker, GitLab CI/CD, AWS, Linux, and Datadog. For AI workflows, I have used OpenAI GPT models, Anthropic Claude, Google AI APIs, local RAG systems, Streamlit, OpenSearch, Sentence Transformers, and Ollama.\n\nI have more experience with Vue than React, but the core frontend concepts transfer well: component structure, state, API integration, user workflows, and validation logic. I would be comfortable adapting to React where needed."
+  },
+  {
+    question: "How do you deal with production issues?",
+    answer: "I try to debug from the system level rather than only looking at the visible error. I look at what changed, where the failure appears, whether it is frontend, backend, database, API, deployment, infrastructure, or data-related, and then narrow it down with logs and reproduction steps.\n\nOne example was a production-critical CI/CD failure caused by runtime and operating system deprecation. Instead of making large application-level changes, I upgraded the execution environment and adjusted the pipeline so that the system could continue running with minimal disruption."
+  },
+  {
+    question: "What do you know about digital twins / personalised medicine?",
+    answer: "My understanding is that digital twins in healthcare are personalised computational representations that integrate different types of data to support prediction, prevention, diagnosis, or treatment decisions. What interests me is that they require more than a model. They need data integration, quality control, interpretability, validation, user trust, and clear clinical or research purpose.\n\nI do not claim to be an expert in digital twins yet, but my experience with biomedical data pipelines, AI-assisted reporting, and healthcare software makes me excited to work in that direction."
+  },
+  // ── FROM: vito_introductory_interview_prep_workspace_2.md ────────────────
+  {
+    question: "How did your three-agent neuroprofiling system work?",
+    answer: "The neuroprofiling platform used AI as an interpretation layer on top of structured inputs, not as a free-form decision maker.\n\nThe system had three main interpretation agents. The first agent interpreted the EEG-based implicit report. It worked from processed EEG-derived features and converted those structured outputs into a more readable interpretation. The second agent interpreted the semantic IAT path responses, which captured patterns from user responses and helped compare implicit and explicit behavior. The third agent combined the outputs of the first two agents to generate the final neuroprofile.\n\nThe important design decision was that the AI did not start from nothing. It worked from structured intermediate outputs. That made the workflow easier to control, easier to explain, and easier to refine compared with asking one model to generate a full profile directly from raw or loosely structured data.\n\nKey point: I used AI as an interpretation layer inside a structured workflow, not as the source of truth."
+  },
+  {
+    question: "Why did you use multiple agents instead of one prompt?",
+    answer: "I used multiple agents because the workflow had different types of interpretation. The EEG-derived report and the semantic IAT path were not the same kind of input, so combining everything into one prompt would have made the system harder to control and debug.\n\nBy separating the workflow into agents, each step had a clearer responsibility. One agent focused on the implicit EEG-related interpretation, one focused on the IAT response interpretation, and the final agent synthesized both into the overall neuroprofile.\n\nThis made the system more modular. If one part of the output was weak, I could inspect whether the issue came from EEG interpretation, IAT interpretation, or final synthesis. It also made iteration easier when we refined the recommendation logic in the second version.\n\nKey point: Multiple agents were used for separation of responsibility, traceability, and easier debugging."
+  },
+  {
+    question: "How did you validate AI-generated reports?",
+    answer: "I treated validation as a workflow problem, not just an output review problem. First, I looked at input quality: whether the required data was available, whether the session data was usable, and whether the structured intermediate outputs made sense.\n\nThen I checked whether the AI output was consistent with the structured inputs. For example, the report should not introduce claims that were not supported by the EEG-derived features, IAT responses, or the predefined mapping logic.\n\nI also used manual review and iteration. After the first version was used in a real setting, we saw that open-ended role generation was too difficult to explain. That led to the second version, where the recommendation logic became more controlled through curated role mapping.\n\nKey point: I did not validate AI by asking whether the text sounded good. I checked whether it stayed faithful to structured inputs and whether the output was explainable."
+  },
+  {
+    question: "How did you reduce hallucination or uncontrolled output?",
+    answer: "The main way was to reduce how much freedom the model had. In the first version, some outputs were more open-ended, especially role suggestions. After real-world use, we realised that this was not controlled enough.\n\nSo in the second version, I moved toward a more structured approach. Cognitive features were mapped to role-relevant abilities, and the system used a curated role list. The AI then selected and explained from that controlled structure instead of freely inventing roles.\n\nIn general, my approach is to give the model structured inputs, clear boundaries, predefined output formats, and limited decision space. For sensitive workflows, I would also include human review and logging of intermediate outputs.\n\nKey point: I controlled hallucination by constraining the model with structured inputs, curated options, and clearer output boundaries."
+  },
+  {
+    question: "Why did you move from LLM-generated roles to curated role mapping?",
+    answer: "The first version gave us useful feedback, but it also showed that open-ended role generation was not explainable enough. If a model freely suggests a role, it can sound convincing, but it becomes difficult to explain why that role was chosen.\n\nFor the second version, I wanted the recommendation logic to be more transparent. So the approach became: extract or define cognitive features, map them to abilities relevant for different roles, use a curated role list, and let the AI select top recommendations from that controlled space.\n\nThat made the output easier to explain and more appropriate for a product that could be used in a recruitment-related context as a decision-support layer.\n\nKey point: The shift from open generation to curated mapping was about explainability, control, and responsible use."
+  },
+  {
+    question: "What makes an AI workflow explainable?",
+    answer: "For me, explainability starts before the final AI output. The workflow should make it clear what inputs were used, what transformations happened, what rules or mappings were applied, and what role the AI played.\n\nIn the neuroprofiling product, explainability improved when role suggestions were not simply generated freely. By mapping cognitive features to role-relevant abilities and using a curated role list, the recommendation could be tied back to a structured logic.\n\nIn healthcare or medical software, I would take this further. I would document the intended use, input data, processing steps, model role, expected outputs, limitations, validation approach, and human oversight points.\n\nKey point: Explainability is not only about explaining the final text. It is about making the whole workflow traceable."
+  },
+  {
+    question: "How would you document this system for a medical software context?",
+    answer: "I would begin with intended use, because that determines the level of risk and the kind of documentation needed. Then I would document the user requirements, system requirements, data flow, model role, inputs and outputs, validation steps, known limitations, and human review points.\n\nFor an AI workflow, I would also document what is deterministic and what is AI-assisted. That distinction matters because deterministic logic can be tested differently from generated output.\n\nI would include test cases for normal inputs, missing data, poor-quality data, edge cases, repeated runs, and unsafe or unsupported outputs. I would also document how changes to prompts, mappings, models, or data processing affect the system behavior.\n\nKey point: Medical software documentation should connect intended use, requirements, risk, validation, traceability, and change control."
+  },
+  {
+    question: "What would change if this system were used for clinical decision support?",
+    answer: "If the system moved into clinical decision support, the expectations would change significantly. The first thing would be to clarify the intended use and claims. A self-insight or decision-support product is very different from software that influences diagnosis, treatment, or clinical decision-making.\n\nIf clinical use were intended, I would expect much stronger requirements around risk analysis, validation, clinical evidence, documentation, traceability, human oversight, data protection, and change control. The AI output would need clear limitations and should not silently make high-impact decisions.\n\nI would also be much more careful about performance evaluation, dataset representativeness, failure modes, and how clinicians interact with the output.\n\nKey point: Clinical decision support requires a different level of validation, evidence, documentation, and risk control."
+  },
+  {
+    question: "What is your understanding of SaMD / MDSW?",
+    answer: "My understanding is that SaMD or medical device software is software that has a medical intended purpose, such as supporting diagnosis, prevention, monitoring, prediction, prognosis, treatment, or alleviation of disease.\n\nThe key issue is intended use. The same technical system can fall into a different category depending on the claims made and how the output is used. If software is only for general wellness or internal research, the regulatory expectations may be different. But if it supports medical decisions, then risk classification, validation, clinical evidence, technical documentation, and post-market considerations become much more important.\n\nI would describe myself as regulatory-aware rather than a regulatory specialist, but I understand why intended use, risk, traceability, and validation are central.\n\nKey point: Intended use drives whether software becomes medical software and what regulatory expectations apply."
+  },
+  {
+    question: "How do you translate user requirements into system requirements?",
+    answer: "I start by mapping the workflow in practical terms. Who is the user? What problem are they trying to solve? What data enters the system? What output do they need? What decisions are automated? What needs human review? What can fail?\n\nFrom there, I convert the user need into system behavior. For example, if the user needs a reliable report, the system requirements may include input validation, required data checks, processing steps, report generation logic, error handling, access control, and output review.\n\nIn my Mindspeller work, many ideas started as broad product or research needs. My job was often to turn those into data flows, backend logic, frontend workflows, validation steps, and documentation.\n\nKey point: I convert vague needs into workflows, then workflows into system behavior and testable requirements."
+  },
+  {
+    question: "How would you test an AI healthcare prototype?",
+    answer: "I would test it at multiple levels. First, I would test the non-AI parts: data ingestion, preprocessing, API behavior, database storage, access control, and frontend behavior.\n\nThen I would test the AI workflow separately. I would check whether the model receives the right inputs, whether the output follows the expected format, whether it stays grounded in the provided data, whether it behaves consistently across similar cases, and whether it handles missing or poor-quality inputs safely.\n\nFor healthcare-related prototypes, I would also test safety and usability: whether the output overclaims, whether limitations are clear, whether human review is needed, and whether the output could be misinterpreted.\n\nKey point: AI healthcare testing should include technical correctness, output quality, safety, usability, and traceability."
+  },
+  {
+    question: "What is RAG, and where would it help in regulatory workflows?",
+    answer: "RAG stands for retrieval-augmented generation. Instead of asking a model to answer only from its internal knowledge, the system first retrieves relevant information from a document collection and then generates an answer grounded in that retrieved context.\n\nIn regulatory workflows, RAG could be useful for searching guidance documents, standards, internal procedures, technical documentation, or previous evidence. It can help users find relevant sections and generate draft summaries or requirement mappings.\n\nBut I would be careful with it. In regulatory contexts, the generated answer should not be treated as final authority. The system should show sources, support traceability, and include human review. Retrieval quality is also important because if the wrong documents are retrieved, the generated answer may still sound convincing but be wrong.\n\nKey point: RAG is useful for source-grounded support, but regulatory use needs citations, retrieval checks, and human review."
+  },
+  {
+    question: "How do you handle sensitive health-related data?",
+    answer: "I think about sensitive data from the start of the workflow. The main questions are: what data is truly necessary, who needs access, where is it stored, whether it is sent to external services, how long it is retained, and how outputs are controlled.\n\nIn my previous role, I worked with GDPR-aware workflows and access control, and I also had DPO responsibilities. From an engineering point of view, I try to apply data minimisation, role-based access, audit-friendly handling, and careful separation between raw data, processed features, and generated outputs.\n\nFor AI workflows, I would be especially careful about sending sensitive data to external APIs. Depending on the use case, I would consider anonymisation, pseudonymisation, local processing, contractual safeguards, or human review before any high-impact use.\n\nKey point: Sensitive data handling is not only a legal concern. It affects architecture, access control, model choice, storage, logging, and review."
+  },
+  {
+    question: "What are your gaps in regulatory knowledge, and how are you addressing them?",
+    answer: "My main gap is that I have not yet owned a full medical software regulatory submission or certification process. I am familiar with MDR and SaMD concepts, and I have practical experience with documentation, validation logic, GDPR-aware workflows, and sensitive data handling, but I would not claim to be a regulatory specialist yet.\n\nWhat I am trying to build is the translation layer between regulation and engineering. I want to understand how requirements from MDR, IVDR, AI Act, and medical software guidance become practical development activities: user requirements, system requirements, risk controls, validation plans, technical documentation, traceability, and post-deployment monitoring.\n\nThat is one of the reasons I am interested in this VITO role. It would allow me to contribute as a hands-on AI/software engineer while growing deeper into regulatory-ready healthcare software.\n\nKey point: I am honest about not being a regulatory specialist yet, but I understand the engineering mindset needed for regulated healthcare software."
   }
 ];
 
