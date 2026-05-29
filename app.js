@@ -454,22 +454,32 @@ el.clearAllBtn.addEventListener("click", () => {
 });
 
 el.loadVitoBtn.addEventListener("click", () => {
-  const existingQs = new Set(cards.map((c) => c.question.toLowerCase().trim()));
-  const fresh = normalizeCards(
-    VITO_SAMPLE_QA.filter((qa) => !existingQs.has(qa.question.toLowerCase().trim()))
-  );
+  // Build a map of existing cards by normalised question text
+  const existingMap = new Map(cards.map((c) => [c.question.toLowerCase().trim(), c]));
 
-  if (fresh.length === 0) {
-    el.importStatus.textContent = "VITO questions already loaded.";
-    el.importStatus.style.color = "var(--text-muted)";
-    return;
-  }
+  let added = 0, updated = 0;
+  VITO_SAMPLE_QA.forEach((qa) => {
+    const key = qa.question.toLowerCase().trim();
+    if (existingMap.has(key)) {
+      // Update the answer of the existing card to match the MD source
+      existingMap.get(key).answer = qa.answer;
+      updated++;
+    } else {
+      cards = cards.concat(normalizeCards([qa]));
+      added++;
+    }
+  });
 
-  cards = cards.concat(fresh);
   saveCards();
   flashState = {};
   saveFlashState();
-  el.importStatus.textContent = `⚡ Loaded ${fresh.length} VITO interview questions.`;
+
+  const parts = [];
+  if (added)   parts.push(`${added} added`);
+  if (updated) parts.push(`${updated} answers updated`);
+  el.importStatus.textContent = parts.length
+    ? `⚡ VITO questions: ${parts.join(", ")}.`
+    : "VITO questions already up to date.";
   el.importStatus.style.color = "var(--cyan)";
   renderCards();
   renderFlashcard();
