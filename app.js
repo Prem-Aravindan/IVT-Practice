@@ -277,8 +277,12 @@ elements.fileInput.addEventListener("change", async (event) => {
   const file = event.target.files && event.target.files[0];
   if (!file) return;
 
-  const text = await file.text();
-  importCardsFromText(text);
+  try {
+    const text = await file.text();
+    importCardsFromText(text);
+  } catch {
+    elements.importStatus.textContent = "⚠️ Could not read file. Try pasting content instead.";
+  }
   elements.fileInput.value = "";
 });
 
@@ -297,7 +301,11 @@ elements.fileDrop.addEventListener("drop", (e) => {
   elements.fileDrop.classList.remove("drag-over");
   const file = e.dataTransfer.files && e.dataTransfer.files[0];
   if (file) {
-    file.text().then((text) => importCardsFromText(text));
+    file.text()
+      .then((text) => importCardsFromText(text))
+      .catch(() => {
+        elements.importStatus.textContent = "⚠️ Could not read dropped file. Try pasting content instead.";
+      });
   }
 });
 
