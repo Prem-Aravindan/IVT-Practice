@@ -795,6 +795,116 @@ kbd {
 }
 
 /* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  .header-inner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .header-meta,
+  .countdown-block {
+    width: 100%;
+  }
+
+  .countdown-block {
+    text-align: left;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    padding: 1rem 0.85rem 2rem;
+  }
+
+  .panel {
+    padding: 1rem;
+  }
+
+  .brand-title {
+    font-size: 1rem;
+  }
+
+  .brand-sub {
+    font-size: 0.68rem;
+  }
+
+  .stats-bar {
+    justify-content: space-between;
+    gap: 0.6rem 0.9rem;
+    padding: 0.65rem 0.85rem;
+  }
+
+  .stat-item {
+    flex: 1 1 42%;
+    min-width: 120px;
+    align-items: flex-start;
+    padding: 0;
+  }
+
+  .stat-divider {
+    display: none;
+  }
+
+  .progress-stat {
+    flex: 1 1 100%;
+    align-items: flex-start;
+  }
+
+  .mini-progress {
+    width: 100%;
+    max-width: 240px;
+  }
+
+  .flashcard-scene {
+    height: 300px;
+  }
+
+  .flashcard-face {
+    padding: 1rem;
+  }
+
+  .flash-controls .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .card-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .app-footer {
+    justify-content: center;
+    text-align: center;
+  }
+}
+
+@media (max-width: 420px) {
+  .header-inner {
+    padding: 0.75rem 1rem;
+  }
+
+  .countdown-value {
+    font-size: 1.1rem;
+  }
+
+  .flashcard-scene {
+    height: 340px;
+  }
+
+  .flashcard-text {
+    font-size: 0.9rem;
+    line-height: 1.6;
+  }
+
+  .footer-keys {
+    display: none;
+  }
+}
+
+/* ============================================================
    UTILITY
    ============================================================ */
 .hidden { display: none !important; }
@@ -813,4 +923,3 @@ kbd {
 ::-webkit-scrollbar-track { background: var(--surface); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
