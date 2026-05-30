@@ -144,6 +144,83 @@ const VITO_SAMPLE_QA = [
   {
     question: "What are your gaps in regulatory knowledge, and how are you addressing them?",
     answer: "My main gap is that I have not yet owned a full medical software regulatory submission or certification process. I am familiar with MDR and SaMD concepts, and I have practical experience with documentation, validation logic, GDPR-aware workflows, and sensitive data handling, but I would not claim to be a regulatory specialist yet.\n\nWhat I am trying to build is the translation layer between regulation and engineering. I want to understand how requirements from MDR, IVDR, AI Act, and medical software guidance become practical development activities: user requirements, system requirements, risk controls, validation plans, technical documentation, traceability, and post-deployment monitoring.\n\nThat is one of the reasons I am interested in this VITO role. It would allow me to contribute as a hands-on AI/software engineer while growing deeper into regulatory-ready healthcare software.\n\nKey point: I am honest about not being a regulatory specialist yet, but I understand the engineering mindset needed for regulated healthcare software."
+  },
+  // ── FROM: prep_3.md ─────────────────────────────────────────────────────
+  {
+    question: "Why Python for AI and data pipelines?",
+    answer: "I used Python because it fit both sides of the work: backend API development and data/AI workflows. It allowed me to connect preprocessing, AI API calls, database operations, and reporting logic in one stack. For production workflows, I tried to separate deterministic logic from generated AI outputs so the system was easier to test and debug."
+  },
+  {
+    question: "What is REST and why did you use REST APIs?",
+    answer: "REST is an architectural style where the client and server communicate over HTTP using standard methods like GET, POST, PATCH, and DELETE, with stateless requests and structured responses.\n\nI used REST APIs because they gave a clear boundary between the frontend workflows and backend processing. The frontend could trigger sessions, retrieve status, display reports, or send user responses, while the backend handled processing, storage, AI orchestration, and validation. JSON was useful because it kept the data exchange structured and easy to inspect."
+  },
+  {
+    question: "How did frontend and backend communicate in your projects?",
+    answer: "The frontend made HTTP requests to REST API endpoints. The backend returned JSON responses. The frontend could trigger sessions, retrieve status, display reports, or send user responses, while the backend handled processing, storage, AI orchestration, and validation. I kept a clear boundary between the two layers so they could be developed, tested, and deployed independently."
+  },
+  {
+    question: "Why MySQL and how did you design the data model?",
+    answer: "MySQL was appropriate because much of the product data was structured: users, sessions, responses, report metadata, access roles, and workflow states. I designed tables around the core workflow entities and their relationships, using foreign keys and normalisation where it helped with consistency and query clarity.\n\nIf we had highly flexible document-like data or massive unstructured logs, a NoSQL or search-based system could make sense, but for transactional product workflows, relational storage was easier to reason about and validate."
+  },
+  {
+    question: "SQL vs NoSQL — how do you decide?",
+    answer: "I start with the data shape and access patterns. If the data is structured, relational, and transactional — users, sessions, workflow states, access roles — SQL is usually easier to validate and reason about. If the data is highly variable, document-like, or the access patterns are very read-heavy at massive scale, NoSQL may be a better fit.\n\nFor the products I worked on, relational storage was the right choice. The data had clear structure, integrity constraints mattered, and the team could reason about the schema and queries."
+  },
+  {
+    question: "Why Docker and what problem did it solve?",
+    answer: "Docker helped make the runtime environment reproducible. Without it, the same code could behave differently depending on system libraries, Python versions, or environment configuration. By containerising the application, I could make sure that what ran in development matched what ran in production.\n\nIt also made deployment and handover easier. Instead of documenting all the environment setup steps, the Dockerfile captured them."
+  },
+  {
+    question: "What is CI/CD and how did your pipeline work?",
+    answer: "CI/CD stands for continuous integration and continuous deployment. The pipeline automatically builds, tests, and deploys the application when changes are pushed to the repository.\n\nI used GitLab CI/CD to automate build and deployment steps, so changes were less manual and easier to track. When a change was pushed, the pipeline ran checks, built the container image, and deployed to the target environment. This reduced manual errors and made the deployment process more consistent and auditable."
+  },
+  {
+    question: "Why not Kubernetes? ECS vs EKS?",
+    answer: "We did not need a complex Kubernetes setup because the system scale and team size did not justify that overhead. My priority was reliable deployment with the least unnecessary complexity.\n\nIf the question is ECS vs EKS: ECS is simpler if you are already on AWS and want managed container orchestration with less Kubernetes overhead. EKS gives more portability and Kubernetes ecosystem flexibility, but it also adds operational complexity. For a small team or focused service deployment, ECS can be the more practical choice. For a larger multi-service platform with Kubernetes expertise, EKS may be better."
+  },
+  {
+    question: "What is S3 and why use it instead of a database?",
+    answer: "S3 is object storage from AWS. I would use it for files or large objects such as reports, raw exports, documents, images, or model artifacts rather than storing them directly in a relational database. A database is designed for structured, queryable records — not for large binary files or flat documents.\n\nAn S3 endpoint is the network endpoint used to access S3. In a cloud architecture, especially inside a VPC, using a VPC endpoint can allow services to access S3 privately without routing traffic over the public internet, which improves both security and latency."
+  },
+  {
+    question: "How did you use LLMs in your workflows?",
+    answer: "I used LLMs as an interpretation layer, not as the source of truth. The structured data came from the workflow first: EEG-derived features, IAT responses, predefined mappings, and report logic. The AI helped convert structured outputs into clearer explanations.\n\nAfter V1, I moved away from free role generation toward curated role mapping, because that made the recommendation logic more explainable and controlled.\n\nThis matters especially for VITO because the work is not a cool AI demo. It is AI that must be tested, documented, explainable, and trustworthy in healthcare contexts."
+  },
+  {
+    question: "Why use agents instead of a single prompt?",
+    answer: "Agents are useful when a workflow has distinct steps with different responsibilities, data, or logic. A single prompt trying to do everything becomes harder to control, debug, and iterate on.\n\nIn the neuroprofiling system, each agent had a clear input and output. That made it easier to identify where problems came from and to improve specific steps without rewriting everything."
+  },
+  {
+    question: "Why RAG instead of fine-tuning?",
+    answer: "RAG is useful when the knowledge is document-specific, changing, or needs traceability. Instead of fine-tuning the model to memorise information, we retrieve relevant document chunks and generate an answer grounded in those chunks.\n\nFine-tuning can help with behaviour or style, but RAG is usually better when the question is about source-grounded factual answers. It is also easier to update — you change the document collection rather than retrain the model."
+  },
+  {
+    question: "What are embeddings and how do they work in RAG?",
+    answer: "Embeddings are numerical representations of text that capture semantic meaning. Texts with similar meaning are close together in the embedding space, which allows a retrieval system to find chunks that are semantically relevant to a query — not just those that share exact keywords.\n\nIn a RAG pipeline, document chunks are embedded and stored in a vector index. At query time, the query is also embedded and the nearest chunks are retrieved to provide context for the model."
+  },
+  {
+    question: "What is chunking and why does it matter in RAG?",
+    answer: "Chunking is the process of splitting documents into smaller pieces before embedding and indexing them. It matters because retrieval quality depends on whether the retrieved chunks are relevant and focused enough to answer the question.\n\nChunks that are too large may retrieve irrelevant surrounding text. Chunks that are too small may lose important context. The right chunking strategy depends on the document type, query patterns, and embedding model limits."
+  },
+  {
+    question: "What is hybrid search in RAG?",
+    answer: "Hybrid search combines vector search — which is semantically aware — with keyword search such as BM25, which is better at exact term matching. The results from both are merged and re-ranked.\n\nIt is useful because neither method alone is always best. Exact terminology such as medical codes, drug names, or regulatory references may be missed by pure vector search but caught by keyword search. Combining them improves retrieval coverage and precision."
+  },
+  {
+    question: "How would you evaluate a RAG system?",
+    answer: "I would evaluate at several levels. First, retrieval quality: are the right chunks being retrieved for a given question? Second, answer quality: is the generated answer faithful to the retrieved context? Third, end-to-end: does the system give correct, grounded, and useful answers for real user questions?\n\nFor healthcare or regulatory use, I would also check whether the system correctly signals uncertainty, shows source references, and handles cases where no relevant information is found — rather than hallucinating an answer."
+  },
+  {
+    question: "When would you use local models instead of external APIs like OpenAI or Claude?",
+    answer: "External APIs are useful when quality, reliability, and development speed matter more than data control. Local models are useful when privacy, cost control, offline use, or data governance are more important.\n\nIn healthcare settings, I would not choose automatically. I would first look at data sensitivity, performance requirements, auditability, deployment constraints, and whether the model output needs to be validated or reviewed. For anything involving identifiable or sensitive health data, local or on-premise processing may be required regardless of model performance."
+  },
+  {
+    question: "You have Vue experience. Can you work with React?",
+    answer: "My production experience is stronger in Vue, but the core frontend concepts transfer: component structure, state management, API integration, form validation, conditional rendering, and user workflow design.\n\nI would need some ramp-up for React-specific patterns such as hooks and the ecosystem around them, but I am comfortable building frontend systems, connecting them to backend workflows, and reasoning about user-facing behaviour. The learning curve is manageable."
+  },
+  {
+    question: "What data should go to an AI API and how do you design access control?",
+    answer: "I try to think about data minimisation first: does the AI actually need this field, or can we work with anonymised or aggregated data instead? For sensitive inputs, I would consider anonymisation, pseudonymisation, or on-premise processing before deciding to send data to an external API.\n\nFor access control, I think about role-based permissions, audit logging, clear boundaries between who can read, write, or trigger high-impact actions, and separation between raw data, processed features, and generated outputs.\n\nIn AI workflows, I would be especially careful about what is passed into a model, how outputs are stored, whether users understand the limitations, and whether human review is needed before any high-impact decision."
   }
 ];
 
