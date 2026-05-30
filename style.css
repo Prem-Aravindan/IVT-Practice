@@ -923,3 +923,98 @@ kbd {
 ::-webkit-scrollbar-track { background: var(--surface); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ============================================================
+   CLOUD SYNC
+   ============================================================ */
+.sync-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.4rem 1.5rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono);
+  font-size: 0.7rem;
+}
+
+.sync-dot {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  transition: color 0.3s;
+}
+.sync-dot.ok      { color: var(--green); }
+.sync-dot.syncing { color: var(--amber); animation: sync-pulse 1s ease-in-out infinite; }
+.sync-dot.error   { color: var(--red); }
+
+@keyframes sync-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.25; }
+}
+
+.sync-bar-msg {
+  flex: 1;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sync-drawer {
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.sync-drawer-inner {
+  padding: 0.9rem 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sync-fields {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .sync-fields { grid-template-columns: 1fr; }
+}
+
+.sync-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.sync-input {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.76rem;
+  padding: 0.45rem 0.65rem;
+  width: 100%;
+  box-sizing: border-box;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.sync-input:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(0,212,255,0.09);
+}
+
+.sync-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.text-faint {
+  color: var(--text-muted);
+  font-weight: 400;
+}

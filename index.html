@@ -61,6 +61,37 @@
     </div>
   </div>
 
+  <!-- ===== CLOUD SYNC BAR ===== -->
+  <div class="sync-bar" id="syncBar">
+    <span class="sync-dot" id="syncDot" title="Sync status">●</span>
+    <span class="sync-bar-msg" id="syncBarMsg">Not synced — progress is local to this browser only.</span>
+    <button class="btn btn-sm btn-ghost" id="syncToggleBtn">☁ Cloud Sync</button>
+  </div>
+
+  <div class="sync-drawer hidden" id="syncDrawer">
+    <div class="container">
+      <div class="sync-drawer-inner">
+        <div class="sync-fields">
+          <div class="sync-field">
+            <label class="field-label" for="gistPatInput">GitHub Personal Access Token <span class="text-faint">(needs <code>gist</code> scope)</span></label>
+            <input type="password" id="gistPatInput" class="sync-input" placeholder="ghp_xxxxxxxxxxxxxxxx" autocomplete="off" spellcheck="false" />
+          </div>
+          <div class="sync-field">
+            <label class="field-label" for="gistIdInput">Gist ID <span class="text-faint">(leave blank to auto-create a private Gist)</span></label>
+            <input type="text" id="gistIdInput" class="sync-input" placeholder="auto-created on first connect" autocomplete="off" spellcheck="false" />
+          </div>
+        </div>
+        <div class="sync-actions">
+          <button class="btn btn-primary" id="syncConnectBtn">Connect</button>
+          <button class="btn btn-ghost" id="syncPullBtn" disabled>↓ Pull</button>
+          <button class="btn btn-ghost" id="syncPushBtn" disabled>↑ Push</button>
+          <button class="btn btn-danger btn-sm" id="syncDisconnectBtn">Disconnect</button>
+        </div>
+        <p id="syncStatus" class="status-msg" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </div>
+
   <main class="container">
 
     <!-- ===== FLASHCARD SECTION ===== -->

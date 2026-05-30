@@ -5,6 +5,9 @@
 
 const STORAGE_KEY       = "ivtPracticeCards";
 const FLASH_STORAGE_KEY = "ivtPracticeFlashState";
+const GIST_PAT_KEY      = "ivtGistPat";
+const GIST_ID_KEY       = "ivtGistId";
+const GIST_FILENAME     = "ivt-practice-data.json";
 const DAILY_LIMIT       = 5;
 const INTERVIEW_DATE    = new Date("2026-06-05T10:45:00");
 
@@ -171,6 +174,18 @@ const el = {
   statCompleted:    document.getElementById("statCompleted"),
   progressBar:      document.getElementById("progressBar"),
   progressLabel:    document.getElementById("progressLabel"),
+  // Sync UI
+  syncDot:          document.getElementById("syncDot"),
+  syncBarMsg:       document.getElementById("syncBarMsg"),
+  syncToggleBtn:    document.getElementById("syncToggleBtn"),
+  syncDrawer:       document.getElementById("syncDrawer"),
+  gistPatInput:     document.getElementById("gistPatInput"),
+  gistIdInput:      document.getElementById("gistIdInput"),
+  syncConnectBtn:   document.getElementById("syncConnectBtn"),
+  syncPullBtn:      document.getElementById("syncPullBtn"),
+  syncPushBtn:      document.getElementById("syncPushBtn"),
+  syncDisconnectBtn:document.getElementById("syncDisconnectBtn"),
+  syncStatus:       document.getElementById("syncStatus"),
 };
 
 /* ---- State ---- */
@@ -185,12 +200,178 @@ function loadCards() {
 }
 function saveCards() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(cards));
+  gist.schedulePush();
 }
 function loadFlashState() {
   try { return JSON.parse(localStorage.getItem(FLASH_STORAGE_KEY)) || {}; } catch { return {}; }
 }
 function saveFlashState() {
   localStorage.setItem(FLASH_STORAGE_KEY, JSON.stringify(flashState));
+}
+
+/* ============================================================
+   CLOUD SYNC — GitHub Gist
+   ============================================================ */
+const gist = {
+  pat:       localStorage.getItem(GIST_PAT_KEY)  || "",
+  id:        localStorage.getItem(GIST_ID_KEY)   || "",
+  status:    "disconnected",
+  pushTimer: null,
+
+  isReady()  { return !!(this.pat && this.id); },
+
+  saveConfig(pat, id) {
+    this.pat = pat;
+    this.id  = id;
+    pat ? localStorage.setItem(GIST_PAT_KEY, pat) : localStorage.removeItem(GIST_PAT_KEY);
+    id  ? localStorage.setItem(GIST_ID_KEY,  id)  : localStorage.removeItem(GIST_ID_KEY);
+  },
+
+  headers() {
+    return {
+      "Authorization":        `Bearer ${this.pat}`,
+      "Accept":               "application/vnd.github+json",
+      "Content-Type":         "application/json",
+      "X-GitHub-Api-Version": "2022-11-28"
+    };
+  },
+
+  _payload() {
+    return JSON.stringify({
+      files: {
+        [GIST_FILENAME]: {
+          content: JSON.stringify({ cards, flashState, lastSynced: new Date().toISOString() }, null, 2)
+        }
+      }
+    });
+  },
+
+  async connect() {
+    if (!this.pat) { renderSyncUI("Enter a Personal Access Token first."); return; }
+    this.status = "syncing";
+    renderSyncUI();
+    try {
+      const auth = await fetch("https://api.github.com/user", { headers: this.headers() });
+      if (!auth.ok) throw new Error(`GitHub auth failed (${auth.status}). Check your token.`);
+
+      if (this.id) {
+        await this._doPull();
+      } else {
+        const r = await fetch("https://api.github.com/gists", {
+          method:  "POST",
+          headers: this.headers(),
+          body:    JSON.stringify({
+            description: "IVT Practice Tracker — Interview Prep Data",
+            public:      false,
+            files:       { [GIST_FILENAME]: { content: JSON.stringify({ cards, flashState, lastSynced: new Date().toISOString() }, null, 2) } }
+          })
+        });
+        if (!r.ok) throw new Error(`Failed to create Gist (${r.status}).`);
+        const data = await r.json();
+        this.saveConfig(this.pat, data.id);
+        this.status = "ok";
+        el.gistIdInput.value = data.id;
+        renderSyncUI(`New Gist created — copy the ID above to use on other devices.`);
+      }
+    } catch (e) {
+      this.status = "error";
+      renderSyncUI(e.message);
+    }
+  },
+
+  async _doPull() {
+    const r = await fetch(`https://api.github.com/gists/${this.id}`, { headers: this.headers() });
+    if (!r.ok) throw new Error(`Could not fetch Gist (${r.status}). Check the Gist ID.`);
+    const data = await r.json();
+    const file = data.files[GIST_FILENAME];
+    if (!file) throw new Error(`File "${GIST_FILENAME}" not found in Gist. Wrong Gist ID?`);
+    const remote = JSON.parse(file.content);
+    if (Array.isArray(remote.cards)) {
+      cards      = remote.cards;
+      flashState = remote.flashState || {};
+      localStorage.setItem(STORAGE_KEY,       JSON.stringify(cards));
+      localStorage.setItem(FLASH_STORAGE_KEY, JSON.stringify(flashState));
+      renderCards();
+      renderFlashcard();
+      renderStats();
+    }
+    const ts = remote.lastSynced ? new Date(remote.lastSynced).toLocaleString() : "unknown";
+    this.status = "ok";
+    renderSyncUI(`Pulled · last cloud save: ${ts}`);
+  },
+
+  async pull() {
+    if (!this.isReady()) return;
+    this.status = "syncing";
+    renderSyncUI();
+    try       { await this._doPull(); }
+    catch (e) { this.status = "error"; renderSyncUI(e.message); }
+  },
+
+  async push() {
+    if (!this.isReady()) return;
+    this.status = "syncing";
+    renderSyncUI();
+    try {
+      const r = await fetch(`https://api.github.com/gists/${this.id}`, {
+        method:  "PATCH",
+        headers: this.headers(),
+        body:    this._payload()
+      });
+      if (!r.ok) throw new Error(`Gist update failed (${r.status}).`);
+      this.status = "ok";
+      renderSyncUI(`Synced at ${new Date().toLocaleTimeString()}`);
+    } catch (e) {
+      this.status = "error";
+      renderSyncUI(e.message);
+    }
+  },
+
+  schedulePush() {
+    if (!this.isReady()) return;
+    clearTimeout(this.pushTimer);
+    this.pushTimer = setTimeout(() => this.push(), 1500);
+  },
+
+  async init() {
+    if (!this.pat) { renderSyncUI(); return; }
+    el.gistPatInput.value = this.pat;
+    el.gistIdInput.value  = this.id;
+    if (this.id) {
+      this.status = "syncing";
+      renderSyncUI();
+      try       { await this._doPull(); }
+      catch (e) { this.status = "error"; renderSyncUI(e.message); }
+    } else {
+      renderSyncUI("Token saved but no Gist ID. Click Connect to create one.");
+    }
+  }
+};
+
+function renderSyncUI(msg = "") {
+  const { syncDot, syncBarMsg, syncPullBtn, syncPushBtn, syncStatus } = el;
+  const cls = { disconnected: "", syncing: "syncing", ok: "ok", error: "error" }[gist.status] || "";
+
+  syncDot.className = `sync-dot${cls ? " " + cls : ""}`;
+  syncPullBtn.disabled = !gist.isReady();
+  syncPushBtn.disabled = !gist.isReady();
+
+  if (gist.status === "disconnected") {
+    syncBarMsg.textContent = "Not synced — progress is local to this browser only.";
+  } else if (gist.status === "syncing") {
+    syncBarMsg.textContent = "Syncing…";
+  } else if (gist.status === "ok") {
+    syncBarMsg.textContent = `☁ Synced via GitHub Gist${msg ? " · " + msg : ""}`;
+  } else {
+    syncBarMsg.textContent = `Sync error${msg ? ": " + msg : ""}`;
+  }
+
+  if (syncStatus) {
+    syncStatus.textContent = msg;
+    syncStatus.style.color = gist.status === "ok" ? "var(--green)"
+                           : gist.status === "error" ? "var(--red)"
+                           : "var(--amber)";
+  }
 }
 
 /* ============================================================
@@ -557,3 +738,28 @@ renderFlashcard();
 renderStats();
 updateCountdown();
 setInterval(updateCountdown, 30_000);
+gist.init();
+
+/* ---- Sync event listeners ---- */
+el.syncToggleBtn.addEventListener("click", () => {
+  el.syncDrawer.classList.toggle("hidden");
+});
+
+el.syncConnectBtn.addEventListener("click", async () => {
+  const pat = el.gistPatInput.value.trim();
+  const id  = el.gistIdInput.value.trim();
+  if (!pat) { el.syncStatus.textContent = "Enter your GitHub Personal Access Token."; return; }
+  gist.saveConfig(pat, id);
+  await gist.connect();
+});
+
+el.syncPullBtn.addEventListener("click", () => gist.pull());
+el.syncPushBtn.addEventListener("click", () => gist.push());
+
+el.syncDisconnectBtn.addEventListener("click", () => {
+  gist.saveConfig("", "");
+  gist.status = "disconnected";
+  el.gistPatInput.value = "";
+  el.gistIdInput.value  = "";
+  renderSyncUI();
+});
