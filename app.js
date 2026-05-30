@@ -30,7 +30,7 @@ const VITO_SAMPLE_QA = [
   },
   {
     question: "Tell us about your AI workflow experience.",
-    answer: "One example is the EEG neuroprofiling and AI reporting workflow I built. The system collected EEG and behavioral data, processed it through signal-processing and feature-extraction steps, then used AI-assisted interpretation to generate clearer summaries for non-technical users.\n\nThe important part was not just calling an LLM. I had to structure the inputs, decide what should be deterministic versus generated, add validation and review steps, and make the output understandable. That taught me to treat AI as one component inside a larger controlled workflow, not as a black box.\n\nDeeper points: Used AI APIs such as OpenAI, Claude, and Google AI APIs. Worked on structured prompting and AI-assisted reporting. Used human-in-the-loop review for sensitive outputs. Built data quality and output consistency checks. Focused on making generated outputs understandable and usable."
+    answer: "One example is the EEG neuroprofiling and AI reporting workflow I built. The system collected EEG and behavioral data, processed it through signal-processing and feature-extraction steps, then used AI-assisted interpretation to generate clearer summaries for non-technical users.\n\nThe important part was not just calling an LLM. I had to structure the inputs, decide what should be deterministic versus generated, add validation and review steps, and make the output understandable. That taught me to treat AI as one component inside a larger controlled workflow, not as a black box.\n\nPoints to include if asked deeper:\n- Used AI APIs such as OpenAI, Claude, and Google AI APIs.\n- Worked on structured prompting and AI-assisted reporting.\n- Used human-in-the-loop review for sensitive outputs.\n- Built data quality and output consistency checks.\n- Focused on making generated outputs understandable and usable."
   },
   {
     question: "How do you handle validation?",
@@ -50,7 +50,7 @@ const VITO_SAMPLE_QA = [
   },
   {
     question: "Why are you applying for a new role while already employed?",
-    answer: "My current role has been valuable because I gained unusual end-to-end ownership very early, across AI workflows, software development, biomedical data pipelines, deployment, documentation, and GDPR-aware handling. It made me a much stronger builder.\n\nThe reason I am looking now is that I want my next step to be more directly connected to healthcare AI and medical software. When I moved from internship to full-time, the part that excited me most was the possibility of contributing to health-related neurotechnology, especially assistive communication. But over time, my work became more focused on B2B neuromarketing and consumer-tech products. I learned a lot from that, but I realised that my long-term motivation is to build systems that are closer to healthcare, patients, validation, and real-world medical impact.\n\nThat is why VITO feels like a strong fit. This role connects AI engineering, healthcare software, prototyping, documentation, regulatory-readiness, and real-world impact. That is the direction I want my career to move in."
+    answer: "My current role has been extremely valuable because it gave me unusual end-to-end ownership very early. I worked across AI workflows, backend services, frontend workflows, biomedical data pipelines, deployment, documentation, validation logic, and GDPR-aware handling. That experience made me a much stronger builder.\n\nThe reason I am exploring a new role is not because I want to simply leave my current company. It is because I want my next step to be more directly aligned with healthcare AI, medical software, and real-world patient impact. When I joined full-time after my internship, what attracted me most was the possibility of contributing to health-related neurotechnology, especially assistive communication for patients with severe motor impairment. Over time, my work became much more focused on the mother company's B2B neuromarketing and consumer-tech side. I learned a lot from that, but it is not the long-term direction I want to build my career in.\n\nVITO is interesting to me because this role brings me back to the space I originally wanted to grow into: AI-enabled healthcare systems, medical software, validation, documentation, regulatory-readiness, and practical impact. I am looking for a role where my builder experience can be used in a more focused healthcare and medtech environment."
   },
   {
     question: "Why should we choose you?",
@@ -62,7 +62,7 @@ const VITO_SAMPLE_QA = [
   },
   {
     question: "What do you mean by end-to-end ownership? Give an example.",
-    answer: "One example is the neuroprofiling and AI reporting platform I built at Mindspeller. I was involved from the early product decision stage, where we narrowed the idea into career profiling, all the way to hardware selection, EEG task design, signal processing, backend workflows, frontend reporting, AI interpretation, and post-launch refinement.\n\nThe difficult part was that we used an affordable single-channel EEG headset, so the data was limited. That forced me to build a more robust live processing layer and think carefully about task design, validation, and interpretation. Later, after thousands of users received their neuroprofile and the product was positioned for recruiters as a decision-support layer, I refined the AI recommendation system to make it more explainable by mapping cognitive features to role-relevant abilities and selecting from a curated role list."
+    answer: "A good example is the neuroprofiling and AI reporting platform I built at Mindspeller.\n\nThe company had a legacy product that was not performing well, and we wanted to create a new product that moved from mainly B2B neuromarketing toward a more scalable user-facing experience. Since the company already had a semantic network developed over several years, and the company's identity was strongly connected to neurotechnology, the idea was to combine EEG, cognitive tasks, semantic responses, and AI-generated interpretation into one product.\n\nMy role was end-to-end because I had to work across the full chain. I helped narrow the product direction from broad ideas like career, relationship, and lifestyle profiling into a more focused career-profiling product. Then I evaluated and selected a commercially viable EEG headset. Because it was a consumer-grade single-channel headset, the data quality and quantity were limited, so I had to build a live processing layer that was robust enough for those constraints.\n\nI also worked on the EEG task design. The tasks had to be researched carefully because we were trying to extract meaningful cognitive features from limited EEG data. The processing approach was later refined with input from a professor in computational neuroscience.\n\nFrom there, I built the software workflow around EEG acquisition, preprocessing, feature extraction, report generation, and user-facing interpretation. In parallel, I built the semantic IAT path, where user responses were used to compare implicit and explicit behavior patterns.\n\nThe AI part was used as an interpretation layer. The product eventually used three agents: one to interpret the EEG-based implicit report, one to interpret the IAT path responses, and a final one to generate the overall neuroprofile. We also improved the recommendation logic after real-world use. In the first version, role suggestions were more LLM-driven. After launching it at an event with thousands of users and later positioning it for recruiters as a decision-support layer, we realised the recommendations needed to be more explainable. So I refined the second version by mapping cognitive features to role-relevant abilities and using a curated role list, so the AI selected from a controlled structure instead of freely generating roles.\n\nSo for me, end-to-end means I was involved from product definition and hardware selection all the way to signal processing, backend workflows, frontend experience, AI interpretation, report generation, validation thinking, and iteration after real users interacted with the product."
   },
   {
     question: "Tell us about your RAG/document assistant project.",
@@ -289,8 +289,19 @@ const gist = {
     if (Array.isArray(remote.cards)) {
       cards      = remote.cards;
       flashState = remote.flashState || {};
+      // Always refresh VITO answers from source MD — fixes stale Gist data
+      const existingMap = new Map(cards.map((c) => [c.question.toLowerCase().trim(), c]));
+      let refreshed = 0;
+      VITO_SAMPLE_QA.forEach((qa) => {
+        const key = qa.question.toLowerCase().trim();
+        if (existingMap.has(key) && existingMap.get(key).answer !== qa.answer) {
+          existingMap.get(key).answer = qa.answer;
+          refreshed++;
+        }
+      });
       localStorage.setItem(STORAGE_KEY,       JSON.stringify(cards));
       localStorage.setItem(FLASH_STORAGE_KEY, JSON.stringify(flashState));
+      if (refreshed > 0) this.schedulePush(); // propagate corrected answers back to Gist
       renderCards();
       renderFlashcard();
       renderStats();
