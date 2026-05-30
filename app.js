@@ -575,6 +575,7 @@ function renderCards() {
   visible.forEach((card) => {
     const li = document.createElement("li");
     li.className = `card status-${card.status}`;
+    li.dataset.id = card.id;
     li.innerHTML = `
       <p class="card-question"><span class="card-q-label">Q</span>${escapeHtml(card.question)}</p>
       <p class="card-answer"><span class="card-a-label">A</span>${escapeHtml(card.answer)}</p>
@@ -584,6 +585,7 @@ function renderCards() {
           <button class="btn-card btn-card-done"    data-id="${card.id}" data-status="completed">✓ Done</button>
           <button class="btn-card btn-card-revisit" data-id="${card.id}" data-status="revisit">↩ Revisit</button>
           <button class="btn-card btn-card-reset"   data-id="${card.id}" data-status="unread">○ Unread</button>
+          <button class="btn-card btn-card-edit"    data-id="${card.id}">✎ Edit</button>
         </div>
       </div>
     `;
@@ -702,14 +704,70 @@ el.filterSelect.addEventListener("change", renderCards);
 el.cardList.addEventListener("click", (event) => {
   const btn = event.target.closest("button[data-id]");
   if (!btn) return;
-  const target = cards.find((c) => c.id === btn.dataset.id);
+  const id     = btn.dataset.id;
+  const target = cards.find((c) => c.id === id);
   if (!target) return;
+
+  if (btn.classList.contains("btn-card-edit")) {
+    openCardEditor(btn.closest(".card"), target);
+    return;
+  }
+
   target.status = btn.dataset.status;
   saveCards();
   renderCards();
   renderFlashcard();
   renderStats();
 });
+
+function openCardEditor(li, card) {
+  // Already editing
+  if (li.querySelector(".card-edit-form")) return;
+
+  // Hide normal view, inject editor
+  li.innerHTML = `
+    <div class="card-edit-form">
+      <label class="field-label">Question</label>
+      <textarea class="card-edit-q sync-input" rows="2">${escapeHtml(card.question)}</textarea>
+      <label class="field-label" style="margin-top:0.6rem">Answer</label>
+      <textarea class="card-edit-a sync-input" rows="8">${escapeHtml(card.answer)}</textarea>
+      <div class="card-edit-actions">
+        <button class="btn btn-primary btn-sm btn-save-edit">Save</button>
+        <button class="btn btn-ghost btn-sm btn-cancel-edit">Cancel</button>
+        <button class="btn btn-danger btn-sm btn-delete-card">Delete card</button>
+      </div>
+    </div>
+  `;
+
+  const qEl   = li.querySelector(".card-edit-q");
+  const aEl   = li.querySelector(".card-edit-a");
+  qEl.focus();
+
+  li.querySelector(".btn-save-edit").addEventListener("click", () => {
+    const newQ = qEl.value.trim();
+    const newA = aEl.value.trim();
+    if (!newQ || !newA) return;
+    card.question = newQ;
+    card.answer   = newA;
+    saveCards();
+    renderCards();
+    renderFlashcard();
+    renderStats();
+  });
+
+  li.querySelector(".btn-cancel-edit").addEventListener("click", () => {
+    renderCards();
+  });
+
+  li.querySelector(".btn-delete-card").addEventListener("click", () => {
+    if (!confirm(`Delete this card?\n\n"${card.question.slice(0, 80)}…"`)) return;
+    cards = cards.filter((c) => c.id !== card.id);
+    saveCards();
+    renderCards();
+    renderFlashcard();
+    renderStats();
+  });
+}
 
 /* Keyboard shortcuts */
 document.addEventListener("keydown", (e) => {

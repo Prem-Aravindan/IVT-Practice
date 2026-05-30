@@ -1018,3 +1018,37 @@ kbd {
   color: var(--text-muted);
   font-weight: 400;
 }
+
+/* ============================================================
+   CARD INLINE EDITOR
+   ============================================================ */
+.card-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.card-edit-q,
+.card-edit-a {
+  resize: vertical;
+  font-family: var(--sans);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.card-edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.55rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btn-card-edit {
+  color: var(--cyan);
+  border-color: rgba(0,212,255,0.22);
+  background: rgba(0,212,255,0.05);
+}
+.btn-card-edit:hover {
+  background: rgba(0,212,255,0.12);
+}
