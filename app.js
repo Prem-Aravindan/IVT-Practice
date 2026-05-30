@@ -366,19 +366,8 @@ const gist = {
     if (Array.isArray(remote.cards)) {
       cards      = remote.cards;
       flashState = remote.flashState || {};
-      // Always refresh VITO answers from source MD — fixes stale Gist data
-      const existingMap = new Map(cards.map((c) => [c.question.toLowerCase().trim(), c]));
-      let refreshed = 0;
-      VITO_SAMPLE_QA.forEach((qa) => {
-        const key = qa.question.toLowerCase().trim();
-        if (existingMap.has(key) && existingMap.get(key).answer !== qa.answer) {
-          existingMap.get(key).answer = qa.answer;
-          refreshed++;
-        }
-      });
       localStorage.setItem(STORAGE_KEY,       JSON.stringify(cards));
       localStorage.setItem(FLASH_STORAGE_KEY, JSON.stringify(flashState));
-      if (refreshed > 0) this.schedulePush(); // propagate corrected answers back to Gist
       renderCards();
       renderFlashcard();
       renderStats();
