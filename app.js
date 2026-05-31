@@ -221,6 +221,99 @@ const VITO_SAMPLE_QA = [
   {
     question: "What data should go to an AI API and how do you design access control?",
     answer: "I try to think about data minimisation first: does the AI actually need this field, or can we work with anonymised or aggregated data instead? For sensitive inputs, I would consider anonymisation, pseudonymisation, or on-premise processing before deciding to send data to an external API.\n\nFor access control, I think about role-based permissions, audit logging, clear boundaries between who can read, write, or trigger high-impact actions, and separation between raw data, processed features, and generated outputs.\n\nIn AI workflows, I would be especially careful about what is passed into a model, how outputs are stored, whether users understand the limitations, and whether human review is needed before any high-impact decision."
+  },
+  // ── FROM: prep4.md — Neuroprofiling AI Deep-Dive ────────────────────────
+  {
+    question: "Was the neuroprofiling AI system a RAG system?",
+    answer: "It was not RAG in the strict technical sense because there was no runtime retrieval from a vector database or document store. But it followed a similar grounding principle: the model should not answer from general memory.\n\nInstead of retrieving context dynamically, each agent received a structured context and instruction package, along with the relevant structured inputs from the EEG or IAT workflow. So I would describe it as a context-constrained interpretation workflow, not RAG.\n\nStrong line: It was RAG-like in philosophy, but not RAG in architecture."
+  },
+  {
+    question: "Why not use RAG for the neuroprofiling platform?",
+    answer: "RAG is useful when the system needs to retrieve changing or document-specific information from a large knowledge base. In this case, the challenge was different. We were not asking the model to search across documents. We already had the relevant structured inputs from the workflow.\n\nThe challenge was interpretation: how to convert EEG-derived features, IAT response patterns, and curated mappings into a coherent report. So a structured prompt-and-agent workflow made more sense than retrieval.\n\nIf the system later needed to reference regulatory documents, scientific literature, or internal knowledge bases dynamically, then RAG would become much more relevant.\n\nStrong line: RAG solves retrieval. My problem was controlled interpretation."
+  },
+  {
+    question: "Why use long 400 to 500-line prompts? Isn't that fragile?",
+    answer: "I would not describe them as casual long prompts. They were closer to structured interpretation protocols. Each agent had a defined role, interpretation boundaries, expected input structure, output format, rules for what it could and could not claim, and enough context to reduce unsupported generation.\n\nThat said, long prompts can become fragile if they are not managed properly. In a more mature or regulated setting, I would treat prompts like versioned software artifacts: they should be version-controlled, tested with regression cases, reviewed after changes, and linked to expected output behavior.\n\nStrong line: The issue is not prompt length by itself. The issue is whether the prompt is structured, testable, and version-controlled."
+  },
+  {
+    question: "Why not fine-tune a model instead of using structured prompts?",
+    answer: "Fine-tuning would make sense if we had a large, high-quality set of reviewed input-output examples and wanted the model to consistently learn a specific style or interpretation behavior.\n\nAt that stage, the system was still evolving. We were refining the product logic, interpretation boundaries, and recommendation method. Structured prompting gave faster control and easier iteration. It also made it easier to change the interpretation rules after real-world feedback.\n\nFine-tuning also does not automatically solve traceability or hallucination. For this use case, constraining the model with structured inputs, curated mappings, and explicit output rules was more practical.\n\nStrong line: Fine-tuning teaches behavior. It does not automatically give traceability."
+  },
+  {
+    question: "Were the neuroprofiling agents autonomous?",
+    answer: "They were not autonomous agents in the sense of freely planning and taking actions across tools. They were role-specific AI interpretation modules inside a controlled workflow.\n\nI called them agents because each had a defined responsibility, context, input type, and output role. One interpreted the EEG-based implicit report, one interpreted the IAT response path, and one synthesized both into the final neuroprofile.\n\nSo technically, it was more of an orchestrated multi-agent interpretation pipeline than an open-ended autonomous agent system.\n\nStrong line: They were bounded agents, not autonomous decision-makers."
+  },
+  {
+    question: "What exactly did the AI interpret in the neuroprofiling system?",
+    answer: "The AI interpreted structured intermediate outputs, not raw signals directly. The EEG-processing layer produced features or structured outputs from the session. The IAT/semantic path produced response patterns. The agents then interpreted these outputs within predefined boundaries.\n\nThe model's role was to translate structured evidence into readable explanations, not to discover the evidence by itself.\n\nStrong line: The AI interpreted processed evidence, not raw reality."
+  },
+  {
+    question: "Why not use deterministic rules for the whole report?",
+    answer: "Some parts should be deterministic, especially scoring logic, mappings, eligibility rules, formatting constraints, and validation checks. But the final report also needed language that could synthesize multiple signals into a coherent explanation for non-technical users.\n\nA fully rule-based report would be easier to control, but it could become rigid and hard to read. A fully LLM-generated report would be flexible, but too unconstrained. So I used a hybrid approach: deterministic structure first, AI-assisted interpretation second.\n\nStrong line: The right design was not rules versus AI. It was rules before AI."
+  },
+  {
+    question: "How did you decide what should be deterministic and what should be AI-assisted?",
+    answer: "Anything that affected evidence, scoring, mappings, or data transformation needed to be deterministic or at least structured. The AI was better suited for explanation, synthesis, and user-facing interpretation.\n\nSo the workflow was designed so that the AI did not create the underlying evidence. It explained and synthesized evidence that already existed in structured form.\n\nStrong line: If something defines the evidence, it should not be left to free generation."
+  },
+  {
+    question: "How would you evaluate an AI system where there is no single correct answer?",
+    answer: "For interpretive AI systems, evaluation cannot rely only on exact-match accuracy. I would evaluate at multiple levels.\n\nFirst, input fidelity: did the AI use the provided structured inputs correctly? Second, consistency: do similar inputs produce similar interpretations? Third, unsupported claims: does the output introduce conclusions that are not grounded in the data? Fourth, usefulness: is the report understandable for the intended user? Fifth, safety: does the report avoid overclaiming or making high-impact decisions without review?\n\nIn a more mature setting, I would create a test set with representative cases and reviewed expected behavior rather than one exact expected sentence.\n\nStrong line: For interpretive AI, I would evaluate faithfulness, consistency, usefulness, and safety, not just accuracy."
+  },
+  {
+    question: "How would you test the prompts in an AI workflow?",
+    answer: "I would treat prompts as part of the software system. That means testing them with normal cases, edge cases, missing-input cases, contradictory-input cases, and poor-quality-data cases.\n\nI would also keep a regression set. If a prompt changes, I would rerun the same test cases and check whether the behavior improved or whether something important broke.\n\nIn a regulated or healthcare setting, I would document prompt versions, model versions, test cases, expected behavior, and known limitations.\n\nStrong line: Prompt changes are software changes. They need regression testing."
+  },
+  {
+    question: "How would you handle model updates from AI providers?",
+    answer: "Model updates are a real risk because the same prompt can behave differently after a provider changes the model. I would handle that by pinning model versions where possible, maintaining regression test cases, logging outputs, and reviewing behavior before switching models.\n\nFor a higher-risk healthcare system, I would not silently change the model in production. A model change should trigger evaluation, documentation updates, and possibly revalidation depending on the intended use.\n\nStrong line: In AI systems, the model version is part of the product behavior."
+  },
+  {
+    question: "Why not use a classical ML classifier for role recommendation?",
+    answer: "A classifier could be useful if we had a strong labelled dataset connecting input features to validated role outcomes. But in this case, the product was not built from a large supervised dataset with ground-truth career labels.\n\nThe problem was more about structured interpretation and explainable recommendation from limited signals. That is why a curated mapping plus AI-assisted explanation was more appropriate at that stage.\n\nIf later the company collected enough validated outcome data, then a classical ML model or hybrid ranking model could become interesting.\n\nStrong line: A classifier needs reliable labels. We had structured signals and interpretation logic, not ground-truth career outcomes."
+  },
+  {
+    question: "How would you make the recommendation system more explainable?",
+    answer: "I would make every recommendation traceable to three layers: input features, role-relevant abilities, and the final role suggestion.\n\nFor example, instead of saying the model recommends this role, the system should be able to say: these structured features were observed, these features map to these abilities, and these abilities are relevant to this role category.\n\nThat creates a clearer explanation chain and reduces the feeling that the AI is making a mysterious judgment.\n\nStrong line: Explainability means showing the path from feature to ability to recommendation."
+  },
+  {
+    question: "What are the risks of using AI in a profiling product?",
+    answer: "The main risks are overclaiming, false confidence, bias, unsupported interpretation, and users treating the output as more objective than it really is.\n\nThat is especially important when neurotechnology is involved because users may assume brain-based output is automatically more scientific or definitive. So the system needs careful wording, limitations, review, and explainability.\n\nFor recruitment-related use, the risk is even higher because the output could influence people's opportunities. That is why I would frame it as decision support, not automated decision-making.\n\nStrong line: The more scientific the interface looks, the more careful the claims need to be."
+  },
+  {
+    question: "Would you send sensitive user data to external LLM APIs?",
+    answer: "I would not decide that casually. It depends on the data type, consent, contracts, anonymisation, retention policy, and the risk level of the use case.\n\nIn general, for sensitive or health-related data, I would minimize what is sent to external APIs. Where possible, I would send structured, pseudonymized, or reduced inputs rather than raw personal data. For higher-risk healthcare workflows, I would also consider local models or controlled infrastructure if privacy requirements demand it.\n\nStrong line: The model choice is also a data governance decision."
+  },
+  {
+    question: "How would the neuroprofiling AI workflow change in a medical software context?",
+    answer: "The first change would be intended use. If the system makes or supports medical claims, the level of evidence and control must increase.\n\nI would expect clearer user and system requirements, risk analysis, traceability, documented validation, clinical or performance evaluation, change control, human oversight, and stronger data governance.\n\nThe AI layer would need to be evaluated not only for quality of language but for safety, consistency, supported claims, and behavior under edge cases.\n\nStrong line: The closer the output gets to patient management, the stronger the evidence and controls need to be."
+  },
+  {
+    question: "What would you improve if you rebuilt the neuroprofiling AI workflow today?",
+    answer: "I would formalize evaluation earlier. I would create a test set of representative profiles, edge cases, missing-data cases, and reviewed outputs. I would also make the prompts more modular, version-controlled, and easier to test.\n\nI would improve traceability so that each major statement in the final report can be linked back to structured inputs or mappings. I would also define clearer confidence and limitation language so the system does not overstate what the data can support.\n\nStrong line: I would move from prompt engineering to prompt governance."
+  },
+  {
+    question: "When would you not use GenAI?",
+    answer: "I would not use GenAI for decisions that need deterministic, auditable logic unless there is strong validation and human oversight. I also would not use it where the task is simple enough for rules, where the output must be exactly reproducible, or where the system cannot tolerate unsupported language.\n\nIn my view, GenAI is most useful for interpretation, summarization, synthesis, and interaction, but the evidence and decision boundaries should come from structured systems.\n\nStrong line: GenAI is powerful for explanation, but risky as the authority."
+  },
+  {
+    question: "How would you design an AI workflow for VITO's regulatory innovation work?",
+    answer: "I would start by identifying the workflow, not the model. For example, if the goal is regulatory documentation support, I would ask: what documents are used, what output is needed, who reviews it, what sources must be cited, and what mistakes are unacceptable?\n\nThen I would likely use a grounded workflow, possibly RAG, because regulatory work needs traceability to source documents. I would combine retrieval, structured templates, human review, output validation, and version control.\n\nI would not position the AI as replacing regulatory judgment. I would position it as assisting document search, requirement mapping, summarization, gap identification, and draft generation under expert review.\n\nStrong line: In regulatory work, AI should accelerate evidence handling, not replace accountability."
+  },
+  {
+    question: "How would you compare different LLMs for a healthcare or regulatory workflow?",
+    answer: "I would compare them based on more than general quality. I would test faithfulness to input, consistency, ability to follow structured output formats, behavior with missing or contradictory inputs, privacy constraints, latency, cost, and ease of deployment.\n\nFor healthcare or regulatory workflows, I would also consider whether the model can be versioned, whether outputs can be logged, whether the deployment model fits data governance requirements, and whether there is enough transparency for the intended use.\n\nStrong line: The best model is not always the smartest model. It is the model that fits the workflow risk."
+  },
+  {
+    question: "How would you handle uncertainty in an AI-generated report?",
+    answer: "I would avoid presenting interpretive outputs as absolute conclusions. The report should use careful language, show limitations, and distinguish between stronger and weaker signals.\n\nIf input quality is poor or the evidence is insufficient, the system should either reduce the confidence of the interpretation or avoid making certain claims. In a higher-risk setting, uncertainty should be explicit and human review should be part of the workflow.\n\nStrong line: A responsible AI system should know when not to sound confident."
+  },
+  {
+    question: "What is the biggest AI lesson you learned from the neuroprofiling project?",
+    answer: "The biggest lesson was that impressive generation is not the same as reliable product behavior.\n\nIn V1, open-ended generation could produce outputs that sounded good, but were harder to justify. In V2, I moved toward structured inputs, curated mappings, clearer agent roles, and bounded interpretation. That made the system less magical but more explainable.\n\nStrong line: The product improved when the AI became less free and more accountable."
+  },
+  {
+    question: "What does responsible AI mean to you?",
+    answer: "Responsible AI means the system is designed around its consequences, not only its capabilities. For me, that includes clear intended use, data minimisation, traceable inputs and outputs, validation, bias awareness, human oversight, limitation statements, and careful control over what the model is allowed to claim.\n\nIn healthcare, responsible AI also means knowing the boundary between support and decision-making. The system should help humans understand evidence, but it should not quietly make high-impact decisions without proper validation and governance.\n\nStrong line: Responsible AI is not a disclaimer at the end. It is an architecture choice from the beginning."
   }
 ];
 
